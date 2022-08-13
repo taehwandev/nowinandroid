@@ -62,3 +62,38 @@ include(":feature-bookmarks")
 include(":feature-topic")
 include(":lint")
 include(":sync")
+
+/**
+ * find subdirectory
+ */
+val modules = hashMapOf<String, String>()
+
+rootProject.projectDir.listFiles()
+    ?.forEach {
+        findSubProjects(it)
+    }
+
+fun findSubProjects(file: File) {
+    if (file.name.startsWith(".")) {
+        return
+    }
+
+    if (file.name == "build.gradle.kts") {
+        modules[file.parentFile.name] = file.parentFile.path
+        return
+    }
+
+    if (file.isDirectory) {
+        file.listFiles()
+            ?.forEach {
+                findSubProjects(it)
+            }
+    }
+}
+
+for (project in rootProject.children) {
+    if (modules.containsKey(project.name)) {
+        val directory = modules[project.name] ?: continue
+        project.projectDir = File(directory)
+    }
+}
